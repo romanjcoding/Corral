@@ -1,0 +1,178 @@
+Corral:
+
+_____________
+Tetris
+    {{0,0}, {0,1}, {0,2}, {0,3}}, // I tetromino
+    {{0,0}, {0,1}, {0,2}, {1,1}}, // T tetromino
+    {{0,1}, {0,2}, {1,0}, {1,1}}, // S tetromino
+    {{0,0}, {1,0}, {2,0}, {2,1}}, // L tetromino
+    {{0,0}, {1,0}, {1,1}, {0,1}} // O tetromino
+
+Solution:
+   AAAA   
+ EE....C   
+ E.....CC 
+ E.....C
+  DD.BB   
+   DDBB
+
+Total: 15
+______________
+
+
+______________
+Addition?
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+
+Solution:
+   A      
+  AAA E   
+   A.EEE  
+  D...E   
+ DDD...C  
+  D.B.CCC 
+   BBB C  
+    B 
+
+Total: 9
+______________
+
+
+______________
+Perfectectly Placed Plus's
+    {{0,1}, {0,2}, {1,0}, {1,1}}, // S tetromino
+    {{0,0}, {0,1}, {0,2}, {0,3}}, // I tetromino
+    {{0,0}, {0,1}, {0,2}, {1,1}}, // T tetromino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + tetromino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + tetromino
+
+Solution:
+    AA D   
+   AA.DDD  
+  C....D   
+ CC.....E  
+  C....EEE 
+   BBBB E  
+
+Total: 14
+_______________
+
+
+_______________
+A Hole Problem
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}}, // square corners tetromino
+    {{1,1}, {-1,-1}, {1,-1}}, // L square corners tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+
+Solution:
+  A AC C 
+ B.B..C  
+  A.AC C 
+   B
+
+Total: 4
+_______________
+
+
+_______________
+Stars and Bars
+    {{0,0},{0,1},{0,2}},
+    {{0,0},{0,1},{0,2}},
+    {{0,0},{0,1},{0,2}},
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+
+Solution:
+    AAAD D  
+ E E....D   
+  E....D.D  
+ E.E......B 
+ F.F......B 
+  F.......B 
+ F F...G.G  
+    CCC.G   
+       G G  
+
+Total: 35
+_______________
+
+
+_______________
+Stars and Boxes
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}}, // square corners tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}}, // square corners tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}}, // square corners tetromino
+    
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+    {{1,1}, {-1,-1}, {1,-1}, {-1,1}, {0,0}}, // X tetromino
+
+
+Solution:
+     A A    
+    B.B     
+     A.A    
+    B.B.D D 
+ E E.....D  
+  E.....D.D 
+ E E...C C  
+    F.F     
+     F.C C  
+    F F     
+
+Total: 20
+_______________
+
+
+_______________
+Where to put the corners?
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,1}, {0,2}, {1,1}, {-1,1}}, // + pentomino
+    {{0,0}, {0,2}, {1,1}, {-1,1}, {1,3}, {2,2}}, // double-staircase pentomino
+    {{0,0}, {0,2}, {1,1}, {-1,1}, {1,3}, {2,2}}, // + double-staircase pentomino
+    {{0,0}, {0,3},{3,3},{3,0}} // 3-length square corners tetromino
+
+
+Solution:
+   A E BE 
+  AAA.BBB 
+   A...B  
+  C..E..E 
+ C.C...D  
+  C.C.D.D 
+   C D.D  
+      D   
+
+Total: 16
+_______________
+
+
+_______________
+Matryoshka 
+    {{0,0}, {0,1},{0,2},{0,3}}, // I tetromino
+    {{0,0}, {0,2},{2,2},{2,0}}, 
+    {{0,0}, {0,3},{3,3},{3,0}},
+    {{0,0}, {0,4},{4,4},{4,0}},
+    {{0,0}, {0,5},{5,5},{5,0}},
+    {{0,0}, {0,6},{6,6},{6,0}},
+
+Solution:
+   AAAA    
+  C..C     
+ D.F.D   F 
+ E....E    
+  C..C     
+  B.B      
+ D...D     
+  B.B      
+ E F  E  F 
+
+ Total: 15 (16!!!!)
+_______________
+           

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Corral</title>
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;500&display=swap');
+    *, :after, :before { box-sizing: border-box; }
+    html {
+      background-image: url('/background/background.png');
+      background-repeat: repeat;
+      background-size: 1600px;
+      overflow: hidden;
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      font-family: 'Lora', Georgia, serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    main { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(15, 32px);
+      grid-template-rows:    repeat(15, 32px);
+      gap: 1px;
+      background: rgba(0,0,0,0.08);
+    }
+
+    :root {
+      --cell-size: 32px;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background: #fff;
+      border: 0px solid black;
+    }
+
+    #tray { display: flex; gap: 24px; align-items: flex-end; }
+    .piece { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+    .piece.used   { opacity: 0.2; pointer-events: none; }
+    .piece.active { outline: 2px solid rgba(0,0,0,0.3); outline-offset: 4px; }
+    .piece-grid { display: grid; gap: 1px; }
+    .pc { width: 18px; height: 18px; }
+    .board-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    #redo-button {
+      position: absolute;
+      height: var(--cell-size);
+      width:  var(--cell-size);
+      top: 0px;
+      right: calc(-1 * var(--cell-size) - 1px);
+      z-index: 10;
+      border-radius: 0px; 
+      background-image: url('/img/redo-button.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 0;
+      padding: 0;
+    }
+
+      #hint-button {
+        position: absolute;
+        height: var(--cell-size);
+        width:  var(--cell-size);
+        top:   calc(1 * var(--cell-size) + 1px);
+        right: calc(-1 * var(--cell-size) - 1px);
+        z-index: 10;
+        border-radius: 0px; 
+        background-image: url('/img/hint-button.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border: 0;
+        padding: 0;
+    }
+
+  </style>
+</head>
+<body>
+<main>
+  <div class="board-wrapper">
+    <button type="button" id="redo-button"></button>
+    <button type="button" id="hint-button"></button>
+    <div id="grid"></div>
+  </div>
+  <div id="tray"></div>
+  <div id="area-counter" style="font-family:'Playfair Display',serif; font-size:48px; color: white;">0</div>
+</main>
+
+<script>
+const N = 15;
+const PIECES = [
+// { color:'#f4a9a8', cells:[[0,0],[0,1],[0,2],[0,3]] }, // I
+// { color:'#a8d8ea', cells:[[0,0],[0,1],[0,2],[1,1]] }, // T
+// { color:'#b8f0c8', cells:[[0,1],[0,2],[1,0],[1,1]] }, // S
+// { color:'#d4b8f0', cells:[[0,0],[1,0],[2,0],[2,1]] }, // L
+// { color:'#ffd6a5', cells:[[0,0],[1,1],[0,1],[1,0]] }, // 2x2 box
+
+// { color:'#ffd6a5', cells:[[1,1],[-1,-1],[1,-1],[-1,1]] }, // corners
+// { color:'#ffb3c6', cells:[[1,1],[-1,-1],[1,-1]] }, // tri-corners
+// { color:'#c9f0d4', cells:[[1,1],[-1,-1],[1,-1],[-1,1],[0,0]] }, // X
+
+// { color:'#fce1a4', cells:[[0,1],[0,2],[1,0],[1,1]] }, // S
+// { color:'#a0c4ff', cells:[[0,0],[0,1],[0,2],[0,3]] }, // I
+// { color:'#caffbf', cells:[[0,0],[0,1],[0,2],[1,1]] }, // T
+
+// { color:'#fdffb6', cells:[[0,0],[0,1],[0,2],[0,3]] }, // I tetromino
+// { color:'#a8d8ea', cells:[[0,0],[0,2],[2,2],[2,0]] }, // 2-square hollow corners
+// { color:'#b8f0c8', cells:[[0,0],[0,3],[3,3],[3,0]] }, // 3-square hollow corners
+// { color:'#d4b8f0', cells:[[0,0],[0,4],[4,4],[4,0]] }, // 4-square hollow corners
+// { color:'#ffd6a5', cells:[[0,0],[0,5],[5,5],[5,0]] }, // 5-square hollow corners
+// { color:'#ffb3c6', cells:[[0,0],[0,6],[6,6],[6,0]] }, // 6-square hollow corners
+
+// { color:'#fdffb6', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] },
+// { color:'#a8d8ea', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] },
+// { color:'#b8f0c8', cells:[[0,0],[0,2],[1,1],[-1,1], [1,3], [2,2]] },
+// { color:'#d4b8f0', cells:[[0,0],[0,2],[1,1],[-1,1], [1,3], [2,2]] },
+// { color:'#ffd6a5', cells:[[0,0],[0,3],[3,3],[3,0]] },
+  
+// { color:'#fdffb6', cells:[[1,1],[-1,-1],[1,-1],[-1,1]] },
+// { color:'#a8d8ea', cells:[[1,1],[-1,-1],[1,-1],[-1,1]] },
+// { color:'#b8f0c8', cells:[[1,1],[-1,-1],[1,-1],[-1,1]] },
+// { color:'#fdffb6', cells:[[1,1], [-1,-1], [1,-1], [-1,1], [0,0]] },
+// { color:'#ffb3c6', cells:[[1,0], [2,0], [3,1], [3,-1]] },
+
+// 1: Difficulty 9/10
+// { color:'#fdffb6', cells:[[0,0],[0,3],[3,3],[3,0]] }, // 3-square hollow corners
+// { color:'#a8d8ea', cells:[[0,0],[0,3],[3,3],[3,0]] }, // 3-square hollow corners
+// { color:'#b8f0c8', cells:[[0,0], [0,1]] },
+// { color:'#d4b8f0', cells:[[0,0], [0,1]] },
+// { color:'#ffd6a5', cells:[[0,0],[-1,1], [1,3], [2,2]] },
+
+// 2: Difficulty 1/10
+// { color:'#fdffb6', cells:[[0,0],[1,0],[2,0],[2,1]] }, // L
+// { color:'#a8d8ea', cells:[[0,0], [0,1]] },
+// { color:'#b8f0c8', cells:[[1,0], [2,1], [3,1], [4,1]] },
+
+// 3: Difficulty 6/10
+// { color:'#fdffb6', cells:[[1,1],[-1,-1],[1,-1],[-1,1]] },
+// { color:'#a8d8ea', cells:[[1,1],[-1,-1],[1,-1],] },
+// { color:'#b8f0c8', cells:[[1,1],[-1,-1],[1,-1],[-1,1],[0,0]] }
+
+// 4: Difficulty 5/10 (Staircase)
+// { color:'#ffb3c6', cells:[[1,0], [2,0], [3,0], [3,1]] },
+// { color:'#b8f0c8', cells:[[0,0],[0,2]] }, // 2-square hollow corners
+// { color:'#d4b8f0', cells:[[0,0],[2,1]] }, // 2-square hollow corners
+// { color:'#ffd6a5', cells:[[0,0],[2,1]] }, // 2-square hollow corners
+
+//5: Difficulty 2/10 (Love love love)
+// { color:'#ffb3c6', cells:[[0,0], [0,1], [0,2], [1,2]] },
+// { color:'#fdffb6', cells:[[0,0], [0,1], [0,2], [1,2]] },
+// { color:'#b8f0c8', cells:[[0,0], [0,1], [0,2], [0,3]] },
+// { color:'#ffd6a5', cells:[[0,0], [0,1], [0,2], [0,3]] },
+
+
+// 6: Difficulty 10/10 ()
+// { color:'#ffb3c6', cells:[[0,0],[0,4],[4,4],[4,0]] }, // 4-square hollow corners
+// { color:'#fdffb6', cells:[[0,0],[0,4],[4,4],[4,0]] }, // 4-square hollow corners
+// { color:'#a8d8ea', cells:[[0,0],[0,4],[4,4],[4,0]] }, // 4-square hollow corners
+// { color:'#b8f0c8', cells:[[0,0],[0,1],[0,2]] }, // 4-bar
+// { color:'#ffd6a5', cells:[[0,0],[0,1],[0,2]] }, // 3-bar
+// { color:'#b8f0c8', cells:[[0,0],[0,1],[0,2]] }, // 3-bar
+// { color:'#a8d8ea', cells:[[0,0],[0,1],[0,2]] }, // 3-bar
+
+// 7: Difficulty 2/10
+// { color:'#ffb3c6', cells:[[0,0],[0,1],[0,2],[1,2]] }, // 4-square hollow corners
+// { color:'#fdffb6', cells:[[0,0],[0,1],[0,2],[1,2]] }, // 4-square hollow corners
+// { color:'#a8d8ea', cells:[[0,0],[0,1],[0,2],[1,2]] }, // 4-square hollow corners
+// { color:'#b8f0c8', cells:[[0,0],[0,1],[0,2],[1,2]] }, // 4-square hollow corners
+
+{ color:'#ffb3c6', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] }, // 4-square hollow corners
+{ color:'#fdffb6', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] }, // 4-square hollow corners
+{ color:'#a8d8ea', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] }, // 4-square hollow corners
+{ color:'#b8f0c8', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] }, // 4-square hollow corners
+{ color:'#ffd6a5', cells:[[0,0],[0,1],[0,2],[1,1], [-1,1]] }, // 4-square hollow corners
+
+];
+
+// ---- geometry --------------------------------------------------------------
+// Transforms rotate/flip about the origin and DON'T re-anchor, so a piece
+// keeps its shape's own coordinate frame. The grab point is transformed the
+// same way, which is what makes a piece spin in place under the cursor.
+const key    = (r, c) => `${r},${c}`;
+const rotCW  = cells => cells.map(([r, c]) => [ c, -r]);
+const rotCCW = cells => cells.map(([r, c]) => [-c,  r]);
+const flip   = cells => cells.map(([r, c]) => [ r, -c]);
+
+// Cell nearest the centroid — a natural pivot for Tetris-like rotation.
+function centerCell(shape) {
+  const cr = shape.reduce((s, [r]) => s + r, 0) / shape.length;
+  const cc = shape.reduce((s, [, c]) => s + c, 0) / shape.length;
+  const d2 = ([r, c]) => (r - cr) ** 2 + (c - cc) ** 2;
+  return shape.reduce((best, x) => d2(x) < d2(best) ? x : best);
+}
+
+// Position `shape` so its grabbed cell lands on (hr,hc), then slide the whole
+// piece back inside the board if it pokes over an edge.
+function placement(shape, hr, hc) {
+  const [gr, gc] = grabOffset;
+  const cells = shape.map(([r, c]) => [r - gr + hr, c - gc + hc]);
+  const rs = cells.map(x => x[0]), cs = cells.map(x => x[1]);
+  const dr = -Math.min(0, ...rs) - Math.max(0, Math.max(...rs) - (N - 1));
+  const dc = -Math.min(0, ...cs) - Math.max(0, Math.max(...cs) - (N - 1));
+  return cells.map(([r, c]) => [r + dr, c + dc]);
+}
+
+// STATE
+const occupied = new Map();              // "r,c" -> piece index
+const shapes   = PIECES.map(p => p.cells.map(x => [...x]));
+let selected   = null;                   // index of piece being placed, or null
+let hovered    = null;                   // [r,c] under the cursor, or null
+let grabOffset = [0, 0];                 // shape cell currently held
+
+const gridEl = document.getElementById('grid');
+const trayEl = document.getElementById('tray');
+
+// RENDERING
+function render() {
+  const preview = new Set(), previewBad = new Set();
+  if (selected !== null && hovered) {
+    for (const [r, c] of placement(shapes[selected], ...hovered)) {
+      const k = key(r, c);
+      (occupied.has(k) ? previewBad : preview).add(k);
+    }
+  }
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const cell = gridEl.children[r * N + c], k = key(r, c);
+    cell.style.background =
+      previewBad.has(k) ? '#f88' :
+      preview.has(k)    ? PIECES[selected].color :
+      occupied.has(k)   ? PIECES[occupied.get(k)].color :
+                          '#fff';
+    cell.style.cursor = (selected === null && occupied.has(k)) ? 'grab' : '';
+  }
+  [...trayEl.children].forEach((el, i) => el.classList.toggle('active', i === selected));
+}
+
+// ACTIONS 
+function liftPiece(idx, clickR, clickC) {
+  const boardCells = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++)
+    if (occupied.get(key(r, c)) === idx) { boardCells.push([r, c]); occupied.delete(key(r, c)); }
+  const minR = Math.min(...boardCells.map(x => x[0]));
+  const minC = Math.min(...boardCells.map(x => x[1]));
+  const sMinR = Math.min(...shapes[idx].map(x => x[0]));
+  const sMinC = Math.min(...shapes[idx].map(x => x[1]));
+  grabOffset = [clickR - minR + sMinR, clickC - minC + sMinC];
+
+  trayEl.children[idx].classList.remove('used');
+  selected = idx;
+  render();
+}
+
+function place(r, c) {
+  if (selected === null) {
+    if (occupied.has(key(r, c))) liftPiece(occupied.get(key(r, c)), r, c);
+    return;
+  }
+  const cells = placement(shapes[selected], r, c);
+  if (cells.some(([r2, c2]) => occupied.has(key(r2, c2)))) return;
+  for (const [r2, c2] of cells) occupied.set(key(r2, c2), selected);
+  trayEl.children[selected].classList.add('used');
+  selected = null;
+  render();
+  updateAreaCounter()
+}
+
+function transform(fn) {
+  shapes[selected] = fn(shapes[selected]);
+  grabOffset = fn([grabOffset])[0];
+}
+
+// BUILD
+function buildGrid() {
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.onmouseenter = () => { hovered = [r, c]; render(); };
+    cell.onclick      = () => place(r, c);
+    gridEl.appendChild(cell);
+  }
+  gridEl.onmouseleave = () => { hovered = null; render(); };
+}
+
+function pieceIcon(cells, color) {
+  const minR = Math.min(...cells.map(x => x[0])), minC = Math.min(...cells.map(x => x[1]));
+  const filled = new Set(cells.map(([r, c]) => key(r - minR, c - minC)));
+  const rows = Math.max(...cells.map(x => x[0])) - minR;
+  const cols = Math.max(...cells.map(x => x[1])) - minC;
+
+  const g = document.createElement('div');
+  g.className = 'piece-grid';
+  g.style.gridTemplateColumns = `repeat(${cols + 1}, 18px)`;
+  for (let r = 0; r <= rows; r++) for (let c = 0; c <= cols; c++) {
+    const d = document.createElement('div');
+    d.className = 'pc';
+    if (filled.has(key(r, c))) d.style.background = color;
+    g.appendChild(d);
+  }
+  return g;
+}
+
+function buildTray() {
+  PIECES.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'piece';
+    wrap.appendChild(pieceIcon(p.cells, p.color));
+    wrap.onclick = () => {
+      selected = (selected === i) ? null : i;
+      if (selected !== null) grabOffset = centerCell(shapes[selected]);
+      render();
+    };
+    trayEl.appendChild(wrap);
+  });
+}
+
+function enclosedArea() {
+  const isFilled = (r, c) => occupied.has(key(r, c));
+  const outside = new Set();
+  const stack = [];
+
+  for (let i = 0; i < N; i++) {
+    for (const [r, c] of [[0, i], [N - 1, i], [i, 0], [i, N - 1]]) {
+      const k = key(r, c);
+      if (!isFilled(r, c) && !outside.has(k)) { outside.add(k); stack.push([r, c]); }
+    }
+  }
+
+  while (stack.length) {
+    const [r, c] = stack.pop();
+    for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nr = r + dr, nc = c + dc, k = key(nr, nc);
+      if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+      if (isFilled(nr, nc) || outside.has(k)) continue;
+      outside.add(k);
+      stack.push([nr, nc]);
+    }
+  }
+
+  const totalEmpty = N * N - occupied.size;
+  return totalEmpty - outside.size;
+}
+
+function updateAreaCounter() {
+  document.getElementById('area-counter').textContent =
+    enclosedArea();
+}
+
+document.addEventListener('keydown', e => {
+  if (selected === null) return;
+  const k = e.key.toLowerCase();
+  if      (k === 'r')      transform(rotCW);
+  else if (k === 'e')      transform(rotCCW);
+  else if (k === 'f')      transform(flip);
+  else if (k === 'escape') selected = null;
+  else return;
+  render();
+});
+
+const redo_button = document.getElementById('redo-button');
+const hint_button = document.getElementById('hint-button');
+
+function reset_pieces() {
+  occupied.clear();
+  selected = null;
+  hovered = null;
+
+  [...trayEl.children].forEach(piece => {
+    piece.classList.remove('used');
+  });
+  render();
+  updateAreaCounter();
+}
+
+function hint() {
+  alert("NO HINT FOR YOU");
+}
+
+redo_button.addEventListener('click', reset_pieces);
+hint_button.addEventListener('click', hint);
+
+buildGrid();
+buildTray();
+render();
+</script>
+</body>
+</html>
