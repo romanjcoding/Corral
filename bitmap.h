@@ -16,16 +16,17 @@
 #include <cstring>
 #include <bit>
 #include <numeric>
+#include <cassert>
 
 constexpr std::pair<int, int> NBH4[] = {
-    {0, 1}, // row, col
+    {0, 1}, // col, row
     {0, -1},
     {1, 0},
     {-1, 0},
 };
 
 constexpr std::pair<int, int> NBH8[] = {
-    {0, 1}, // row, col
+    {0, 1}, // col, row
     {0, -1},
     {1, 0},
     {-1, 0},
@@ -129,7 +130,7 @@ public:
         bitmap original {*this};
         for (auto [dr, dc] : directions) {
             bitmap shift {original};
-            shift.move(dr, dc);
+            shift.move(dc, dr);
             *this |= shift;
         }
     }
