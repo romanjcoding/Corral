@@ -1,11 +1,14 @@
 #include "AVAILABLE_PIECES.h"
 #include "dynamic_array.h"
+#include "fast_map.h"
 #include "bitmap.h"
+
 #include <ranges>
+#include <cstdint>
+#include <utility>
+#include <algorithm>
 
-util::fast_map<bitmap, bitmap, MAXIMUM_ORIENTATIONS * NUM_PIECES> PRECOMPUTED_TO_CANONICAL{};
-
-constexpr auto ORIENTATIONS_PRECOMPUTED = []() {
+inline constexpr auto ORIENTATIONS_PRECOMPUTED = []() {
     util::fast_map<bitmap, util::dynamic_array<bitmap, MAXIMUM_ORIENTATIONS>, NUM_PIECES> m{};
     auto it { m.data.begin() };
     for (auto piece : std::views::keys(AVAILABLE_PIECES)) {
@@ -17,25 +20,40 @@ constexpr auto ORIENTATIONS_PRECOMPUTED = []() {
     return m;
 }();
 
-constexpr auto TO_CANONICAL_PRECOMPUTED = []{} (
+inline constexpr auto TO_CANONICAL_PRECOMPUTED = []() {
     util::fast_map<bitmap, bitmap, MAXIMUM_ORIENTATIONS * NUM_PIECES> m{};
-    return m;
-)
-
-void run_precomputations() {
-
-    for (const auto piece : std::views::keys(AVAILABLE_PIECES)) {  
-        auto piece_cpy {piece};
-        piece_cpy.canonicalize();
-        for (const auto orient : generate_all_orientations(piece_cpy)) {
-            ORIENTATIONS_PRECOMPUTED.at(piece).push_back(orient);
-            // PRECOMPUTED_TO_CANONICAL[orient] = piece;
-            auto vec { orient.get_valid_bits() };
-            // PRECOMPUTED_TRUE_BITS[orient] = vec;
+    auto it { m.data.begin() };
+    for (auto piece : std::views::keys(AVAILABLE_PIECES)) {
+        piece.canonicalize();
+        for (auto orient : generate_all_orientations(piece)) {
+            it->first = piece;
+            it->second = orient;
+            it++;
         }
     }
-}
+    return m;
+}();
 
-// util::fast_map<bitmap, bitmap> TO_CANONICAL_PRECOMPUTED{};
-// util::fast_map<bitmap, std::vector<std::pair<size_t, size_t>>> TRUE_BITS_PRECOMPUTED{};
+inline constexpr auto MAX_PIECE_BITS = []() {
+    size_t max{0uz};
+    for (const auto& piece : std::views::keys(AVAILABLE_PIECES)) { max = std::max(max, piece.count()); }
+    return max;
+}();
 
+inline constexpr auto VALID_BITS_PRECOMPUTED = []() {
+    util::fast_map<bitmap, util::dynamic_array<std::pair<size_t, size_t>, MAX_PIECE_BITS>, NUM_PIECES> m{};
+    auto it { m.data.begin() };
+    for (auto piece : std::views::keys(AVAILABLE_PIECES)) {
+        piece.canonicalize();
+        it->first = piece;
+        for (auto row : std::views::iota(0uz, GRID_SIZE)) {
+            for (auto col : std::views::iota(0uz, GRID_SIZE)) {
+                if (piece.test(col, row)) {
+                    it->second.push_back(std::pair(col, row));
+                }
+            }
+        }
+        it++;
+    }
+    return m;
+}();
