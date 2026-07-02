@@ -96,7 +96,7 @@ public:
         shift_y(dy);
     }
 
-    constexpr bool any() { return std::ranges::any_of(m_data, std::identity{}); }
+    constexpr bool any() const { return std::ranges::any_of(m_data, std::identity{}); }
     constexpr void set(size_t col, size_t row) {
         assert(row < m_width);
         assert(col < m_height);
@@ -119,7 +119,7 @@ public:
     constexpr std::pair<size_t, size_t> max_corner() const;
 
     constexpr void normalize() {
-        const auto [min_row, min_col] {min_corner()};
+        const auto [min_col, min_row] {min_corner()};
         move(-min_col, -min_row);
     }
 

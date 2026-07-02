@@ -69,10 +69,10 @@ size_t enclosed_area(const bitmap& m) {
 //             const auto orientations { precomputed_generate_all_orientations(raw_piece) };
 //             for (const auto& piece : orientations) {
 
-//                 auto [max_row, max_col] { piece.max_corner() };
+//                 auto [max_col, max_row] { piece.max_corner() };
 //                 const auto piece_indices { precomputed_get_true_bits(piece) };
 
-//                 for (auto [piece_r, piece_c] : piece_indices) {
+//                 for (auto [piece_c, piece_r] : piece_indices) {
 
 //                     // require min_r + r > 0 --> r > 0
 //                     // require min_c + c > 0 --> c > 0
