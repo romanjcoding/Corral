@@ -52,10 +52,14 @@ void progress_reporter() {
         last_time  = now;
 
         const auto secs = duration_cast<seconds>(now - start);
-        std::cerr << "\r[" << g_top_done.load() << "/" << g_top_total.load()
-                  << " top branches]  nodes=" << nodes
-                  << "  " << std::format("{:.3}", inst_rate / 1e6) << "M nodes/s"
-                  << " (avg " << std::format("{:.3}", avg_rate / 1e6) << "M)"
+        std::cout << "\r[" << g_top_done.load() << "/" << g_top_total.load()
+                  << " top branches]  nodes=";
+            
+        if      (nodes > 1e9) { std::cout << std::format("{:.1f}", nodes / 1e9) << "B"; }
+        else if (nodes > 1e6) { std::cout << std::format("{:.1f}", nodes / 1e6) << "M"; }
+                  
+        std::cout << "  " << std::format("{:.2f}", inst_rate / 1e6) << "M nodes/s"
+                  << " (avg " << std::format("{:.2f}", avg_rate / 1e6) << "M)"
                   << "  " << std::format("{:.2f}", inst_us) << " us/node"
                   << " (avg " << std::format("{:.2f}", avg_us) << "u)"
                   << "  elapsed="
@@ -131,21 +135,31 @@ std::vector<bitmap> generate_all_placements(std::span<const bitmap> pieces, cons
     return placements;
 }
 
+struct solution_memo {
+
+};
+
+
+
 std::vector<bitmap> solve(const bitmap& grid, util::fast_map<bitmap, size_t, NUM_PIECES>& pieces, int depth = AVAILABLE_PIECES.data.size()) { 
 
     g_nodes.fetch_add(1, std::memory_order_relaxed);
     const size_t level = AVAILABLE_PIECES.data.size() - depth;
     g_depth_nodes[level].fetch_add(1, std::memory_order_relaxed);
 
-    if (depth == 0) { return { grid }; }
+    if (depth == 0) {
+         return { grid }; 
+    }
 
     auto piece_masks { 
-        AVAILABLE_PIECES
+        pieces
         | std::views::filter([](const auto& pair) { return pair.second >= 1; })
         | std::views::keys
         | std::ranges::to<std::vector<bitmap>>() };
 
     std::vector<bitmap> placements{};
+    // placements.reserve(); TODO: efficient reserve amount -- generate dist of estimated #placements?
+
     if (grid == bitmap{}) {
         placements = generate_all_placements(piece_masks, TOP_LEFT, bitmap{});
     }
@@ -160,7 +174,6 @@ std::vector<bitmap> solve(const bitmap& grid, util::fast_map<bitmap, size_t, NUM
     // Also record each level
     g_depth_children[level].fetch_add(placements.size(), std::memory_order_relaxed);
 
-    bitmap max_mask {grid};
     size_t max_area{0};
     std::vector<bitmap> max_solutions{};
 
