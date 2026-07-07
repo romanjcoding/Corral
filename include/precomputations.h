@@ -10,8 +10,8 @@
 
 // pre-condition: each lookup is canonicalized
 inline constexpr auto ORIENTATIONS_PRECOMPUTED = []() {
-    util::fast_map<bitmap, util::dynamic_array<bitmap, MAXIMUM_ORIENTATIONS>, NUM_PIECES> m{};
-    auto it { m.data.begin() };
+    util::fast_map<bitmap, util::dynamic_array<bitmap, MAXIMUM_ORIENTATIONS>, DISTINCT_PIECE_CT> m{};
+    auto it { m.begin() };
     for (auto piece : std::views::keys(AVAILABLE_PIECES)) {
         piece.canonicalize();
         it->first = piece;
@@ -23,8 +23,8 @@ inline constexpr auto ORIENTATIONS_PRECOMPUTED = []() {
 
 // pre-condition: each lookup is normalized
 inline constexpr auto TO_CANONICAL_PRECOMPUTED = []() {
-    util::fast_map<bitmap, bitmap, MAXIMUM_ORIENTATIONS * NUM_PIECES> m{};
-    auto it { m.data.begin() };
+    util::fast_map<bitmap, bitmap, MAXIMUM_ORIENTATIONS * DISTINCT_PIECE_CT> m{};
+    auto it { m.begin() };
     for (auto piece : std::views::keys(AVAILABLE_PIECES)) {
         piece.canonicalize();
         for (auto orient : generate_all_orientations(piece)) {
@@ -43,8 +43,8 @@ inline constexpr auto MAX_PIECE_BITS = []() {
 }();
 
 inline constexpr auto VALID_BITS_PRECOMPUTED = []() {
-    util::fast_map<bitmap, util::dynamic_array<std::pair<size_t, size_t>, MAX_PIECE_BITS>, NUM_PIECES * MAXIMUM_ORIENTATIONS> m{};
-    auto it { m.data.begin() };
+    util::fast_map<bitmap, util::dynamic_array<std::pair<size_t, size_t>, MAX_PIECE_BITS>, DISTINCT_PIECE_CT * MAXIMUM_ORIENTATIONS> m{};
+    auto it { m.begin() };
     for (const auto& piece : std::views::keys(AVAILABLE_PIECES)) {
         for (const auto& orient : generate_all_orientations(piece)) {
             it->first = orient;
@@ -63,8 +63,8 @@ inline constexpr auto VALID_BITS_PRECOMPUTED = []() {
 
 // pre-condition: each lookup is normalized
 inline constexpr auto MAX_CORNER_PRECOMPUTED = []() {
-    util::fast_map<bitmap, std::pair<size_t, size_t>, NUM_PIECES * MAXIMUM_ORIENTATIONS> m{};
-    auto it { m.data.begin() };
+    util::fast_map<bitmap, std::pair<size_t, size_t>, DISTINCT_PIECE_CT * MAXIMUM_ORIENTATIONS> m{};
+    auto it { m.begin() };
     for (const auto& piece : std::views::keys(AVAILABLE_PIECES)) {
         for (const auto& orient : generate_all_orientations(piece)) {
             it->first = orient;
