@@ -2,8 +2,10 @@
 
 #include <chrono>
 #include <iostream>
-#include <functional>
 #include <ranges>
+#include <array>
+#include <format>
+#include <stdexcept>
 
 template <size_t Size>
 class timer {
@@ -19,19 +21,19 @@ public:
     }
 
     void pause(size_t idx) {
-        if (is_paused) { throw std::runtime_error("Timer is paused when *.pause() was called"); } 
-        m_duration[idx] += std::chrono::high_resolution_clock::now() - m_start;
+        if (is_paused[idx]) { throw std::runtime_error("Timer is paused when *.pause() was called"); } 
+        m_duration[idx] += std::chrono::high_resolution_clock::now() - m_start[idx];
     }
 
     void unpause(size_t idx) {
-        if (!is_paused) { throw std::runtime_error("Timer is unpaused when *.unpause() was called"); } 
+        if (!is_paused[idx]) { throw std::runtime_error("Timer is unpaused when *.unpause() was called"); } 
         m_start[idx] = std::chrono::high_resolution_clock::now();
     }
 
     ~timer() {
-        for (auto i : std::views::iota(0uz, Size)) {
-            if (!is_paused) { (*this).pause(); }
-            std::cout << std::format("Clock #{}; Execution time: {} seconds\n", i, m_duration.count());
+        for (auto idx : std::views::iota(0uz, Size)) {
+            if (!is_paused[idx]) { (*this).pause(idx); }
+            std::cout << std::format("Clock #{}; Execution time: {} seconds\n", idx, m_duration[idx].count());
         }
     }
 };
